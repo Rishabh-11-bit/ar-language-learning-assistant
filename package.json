@@ -1,0 +1,34 @@
+{
+  "name": "ar-language-learning-assistant",
+  "version": "1.0.0",
+  "description": "AR-based vocabulary learning system — ARVR Course 2025-26",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --win --x64",
+    "build:dir": "electron-builder --win --dir"
+  },
+  "build": {
+    "appId": "com.arvr.language-learning-assistant",
+    "productName": "AR Language Learning Assistant",
+    "directories": {
+      "output": "dist"
+    },
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "files": [
+      "**/*",
+      "!node_modules/.cache",
+      "!dist"
+    ]
+  },
+  "devDependencies": {
+    "electron": "^28.3.3",
+    "electron-builder": "^24.9.1"
+  }
+}

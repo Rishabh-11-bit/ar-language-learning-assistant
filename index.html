@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#12121e" />
+  <title>AR Language Learning Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ══════════════════════════════════════════════
+       SPLASH / HOME SCREEN
+       ══════════════════════════════════════════════ -->
+  <div id="splash-screen" class="screen active">
+    <div class="splash-content">
+
+      <div class="splash-logo">
+        <div class="logo-icon">AR</div>
+        <h1>Language Learning<br>Assistant</h1>
+        <p class="tagline">Point your camera at objects to learn vocabulary in context</p>
+      </div>
+
+      <div class="splash-stats">
+        <div class="stat-card">
+          <span class="stat-number" id="stat-words-seen">0</span>
+          <span class="stat-label">Words Seen</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-words-learned">0</span>
+          <span class="stat-label">Learned</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-number" id="stat-quiz-score">0%</span>
+          <span class="stat-label">Quiz Score</span>
+        </div>
+      </div>
+
+      <div class="splash-actions">
+        <button id="btn-start-ar" class="btn-primary">
+          📷 &nbsp;Start AR Camera
+        </button>
+        <button id="btn-progress" class="btn-secondary">
+          View My Vocabulary Progress
+        </button>
+      </div>
+
+      <div class="language-selector">
+        <label for="target-language">I'm learning:</label>
+        <select id="target-language">
+          <option value="en">English 🇬🇧</option>
+          <option value="fr">French 🇫🇷</option>
+          <option value="es">Spanish 🇪🇸</option>
+          <option value="hi">Hindi 🇮🇳</option>
+          <option value="mr">Marathi 🇮🇳</option>
+          <option value="ja">Japanese 🇯🇵</option>
+          <option value="ar">Arabic 🇸🇦</option>
+        </select>
+      </div>
+
+      <p style="text-align:center;font-size:.72rem;color:#5a5a7a;margin-top:-.5rem">
+        AR Language Learning Assistant &mdash; ARVR Course 2025&ndash;26
+      </p>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       AR CAMERA SCREEN
+       ══════════════════════════════════════════════ -->
+  <div id="ar-screen" class="screen">
+
+    <!-- Camera + canvas layers -->
+    <video id="camera-feed" autoplay playsinline muted></video>
+    <canvas id="ar-canvas"></canvas>
+    <div id="ar-labels"></div>
+
+    <!-- Top HUD -->
+    <div class="ar-hud-top">
+      <button id="btn-back" class="hud-btn" title="Exit AR">←</button>
+      <div class="detection-status">
+        <div class="status-dot" id="status-dot"></div>
+        <span id="detection-count">Scanning…</span>
+      </div>
+      <div class="language-badge" id="language-badge">FR</div>
+    </div>
+
+    <!-- MobileNet Scene Recognition Panel -->
+    <div id="mnet-panel" class="mnet-panel hidden">
+      <div class="mnet-header">
+        <span class="mnet-icon">🔍</span>
+        <span class="mnet-title">Scene Recognition</span>
+        <button id="mnet-toggle" class="mnet-toggle">−</button>
+      </div>
+      <div id="mnet-results" class="mnet-results"></div>
+    </div>
+
+    <!-- Bottom HUD -->
+    <div class="ar-hud-bottom">
+      <button id="btn-quiz" class="hud-btn-lg">Quiz Mode</button>
+      <button id="btn-view-progress" class="hud-btn-sm">Progress</button>
+    </div>
+
+    <!-- Model loading overlay -->
+    <div id="model-loading" class="loading-overlay">
+      <div class="loading-spinner"></div>
+      <p id="loading-text">Starting camera…</p>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       VOCABULARY CARD (slide-up panel)
+       ══════════════════════════════════════════════ -->
+  <div id="vocab-card" class="hidden">
+    <div class="vocab-card-handle"></div>
+    <div class="vocab-header">
+      <div>
+        <h2 id="vc-word">Apple</h2>
+        <span class="vocab-phonetic" id="vc-phonetic">/ˈæp.əl/</span>
+        <span class="vocab-pos" id="vc-pos">noun</span>
+      </div>
+      <button id="vc-audio-btn" class="audio-btn" title="Hear pronunciation">🔊</button>
+    </div>
+
+    <div class="vocab-translation" id="vc-translation"></div>
+    <p class="vocab-definition" id="vc-definition"></p>
+    <p class="vocab-example" id="vc-example"></p>
+
+    <div class="vocab-actions">
+      <button id="vc-quiz-btn" class="btn-quiz-this">Quiz Me!</button>
+      <button id="vc-close-btn" class="btn-close-vocab">Got it! ✓</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       QUIZ MODAL
+       ══════════════════════════════════════════════ -->
+  <div id="quiz-modal" class="hidden">
+    <div class="modal-content">
+
+      <div class="quiz-header">
+        <h3>Quick Quiz</h3>
+        <button id="quiz-close-btn" title="Close quiz">✕</button>
+        <span id="quiz-score-display">0/0</span>
+      </div>
+
+      <div id="quiz-question-area">
+        <p id="quiz-question"></p>
+        <div id="quiz-options" class="quiz-options"></div>
+      </div>
+
+      <div id="quiz-feedback" class="quiz-feedback hidden">
+        <span id="feedback-icon"></span>
+        <p id="feedback-text"></p>
+        <button id="quiz-next-btn" class="btn-primary" style="width:100%;margin-top:.4rem">Next →</button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       PROGRESS SCREEN
+       ══════════════════════════════════════════════ -->
+  <div id="progress-screen" class="screen">
+
+    <div class="progress-header">
+      <button id="btn-back-progress" class="hud-btn">←</button>
+      <h2>My Vocabulary</h2>
+    </div>
+
+    <div class="progress-stats">
+      <div class="stat-bar-container">
+        <div class="stat-bar" id="progress-bar" style="width:0%"></div>
+      </div>
+      <p id="progress-text">Loading…</p>
+    </div>
+
+    <div id="word-list" class="word-list"></div>
+
+  </div>
+
+  <!-- TensorFlow.js + COCO-SSD + MobileNet (CDN) -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+
+  <!-- App scripts -->
+  <script src="js/vocabulary.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
