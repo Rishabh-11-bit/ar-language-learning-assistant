@@ -82,7 +82,7 @@
         <div class="status-dot" id="status-dot"></div>
         <span id="detection-count">Scanning…</span>
       </div>
-      <div class="language-badge" id="language-badge">FR</div>
+      <div class="language-badge" id="language-badge">EN</div>
     </div>
 
     <!-- MobileNet Scene Recognition Panel -->
@@ -180,10 +180,10 @@
 
   </div>
 
-  <!-- TensorFlow.js + COCO-SSD + MobileNet (CDN) -->
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.0/dist/mobilenet.min.js"></script>
+  <!-- TensorFlow.js + COCO-SSD + MobileNet (local — works in Electron file:// context) -->
+  <script src="node_modules/@tensorflow/tfjs/dist/tf.min.js"></script>
+  <script src="node_modules/@tensorflow-models/coco-ssd/dist/coco-ssd.min.js"></script>
+  <script src="node_modules/@tensorflow-models/mobilenet/dist/mobilenet.min.js"></script>
 
   <!-- App scripts -->
   <script src="js/vocabulary.js"></script>

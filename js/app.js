@@ -119,13 +119,27 @@ class ARApp {
 
   // ─── AR & Camera ───────────────────────────────────────────────────────────
 
+  // Safe helper — update the loading text without crashing if element is gone
+  setLoadingText(msg) {
+    const el = this.modelLoadingEl && this.modelLoadingEl.querySelector('p');
+    if (el) el.textContent = msg;
+  }
+
   async startAR() {
     this.showScreen('ar-screen');
-    this.modelLoadingEl.innerHTML = '<div class="loading-spinner"></div><p id="loading-text">Starting camera…</p>';
+
+    // Rebuild overlay content and keep a direct reference — avoids getElementById-on-null
+    this.modelLoadingEl.innerHTML = '';
+    const spinner = document.createElement('div');
+    spinner.className = 'loading-spinner';
+    const loadingP = document.createElement('p');
+    loadingP.textContent = 'Starting camera…';
+    this.modelLoadingEl.appendChild(spinner);
+    this.modelLoadingEl.appendChild(loadingP);
     this.modelLoadingEl.style.display = 'flex';
 
     try {
-      // Camera
+      // ── Camera ──────────────────────────────────────────────────────────
       this.stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: false,
@@ -134,38 +148,40 @@ class ARApp {
       await new Promise(res => (this.video.onloadedmetadata = res));
       this.video.play();
 
-      // Load COCO-SSD (object detection with bounding boxes)
+      // ── COCO-SSD (bounding-box detection, 80 classes) ────────────────────
       if (!this.cocoModel) {
-        this.$('loading-text').textContent = 'Loading Object Detection…';
-        this.cocoModel = await cocoSsd.load();
+        this.setLoadingText('Loading Object Detection…');
+        if (typeof cocoSsd === 'undefined') throw new Error('TF.js COCO-SSD library not loaded — check internet connection.');
+        this.cocoModel = await cocoSsd.load({ base: 'lite_mobilenet_v2' });
       }
 
-      // Load MobileNet (1000-class scene recognition) — optional
+      // ── MobileNet (1000-class scene recognition) — optional ──────────────
       if (!this.mnetModel) {
-        this.$('loading-text').textContent = 'Loading Scene Recognition…';
+        this.setLoadingText('Loading Scene Recognition…');
         try {
-          this.mnetModel = await mobilenet.load({ version: 1, alpha: 0.25 });
+          if (typeof mobilenet !== 'undefined') {
+            this.mnetModel = await mobilenet.load({ version: 1, alpha: 0.25 });
+          }
         } catch (mnetErr) {
-          console.warn('MobileNet unavailable, scene recognition disabled:', mnetErr.message);
+          console.warn('MobileNet unavailable, continuing without scene recognition:', mnetErr.message);
           this.mnetModel = null;
         }
       }
 
       this.modelLoadingEl.style.display = 'none';
-
-      // Show scene panel
-      const panel = this.$('mnet-panel');
-      panel.classList.remove('hidden');
+      if (this.mnetModel) this.$('mnet-panel').classList.remove('hidden');
 
       this.resizeCanvas();
       window.addEventListener('resize', () => this.resizeCanvas());
       this.frameCount = 0;
       this.detectionLoop();
+
     } catch (err) {
+      const isPermission = err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError';
       this.modelLoadingEl.innerHTML = `
         <div class="loading-error">
           <span>⚠️</span>
-          <p>${err.name === 'NotAllowedError' ? 'Camera permission denied. Please allow camera access.' : 'Could not start camera: ' + err.message}</p>
+          <p>${isPermission ? 'Camera permission denied. Please allow camera access and retry.' : 'Could not start: ' + err.message}</p>
           <button onclick="app.stopAR()" class="btn-primary" style="margin-top:1rem">Go Back</button>
         </div>`;
     }
